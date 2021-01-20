@@ -21,6 +21,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.jetty.Jetty
 import kotlinx.coroutines.CancellationException
 import net.sourceforge.argparse4j.ArgumentParsers
+import net.sourceforge.argparse4j.helper.HelpScreenException
 import org.jitsi.jibri.api.http.HttpApi
 import org.jitsi.jibri.api.http.internal.InternalHttpApi
 import org.jitsi.jibri.api.xmpp.XmppApi
@@ -49,7 +50,16 @@ val logger: Logger = Logger.getLogger("org.jitsi.jibri.Main")
 
 fun main(args: Array<String>) {
     setupMetaconfigLogger()
-    handleCommandLineArgs(args)
+
+    try {
+        handleCommandLineArgs(args)
+    }
+    catch (_: HelpScreenException) {
+        // User wanted to see the help screen by issuing '-h' or '--help'
+        // command-line argument.
+        // It was already shown by ArgParse4J, so we don't need to do anything further.
+        return
+    }
 
     val jibriStatusManager = JibriStatusManager()
     val jibriManager = JibriManager()
