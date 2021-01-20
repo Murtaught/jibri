@@ -83,6 +83,10 @@ class StreamingJibriService(
             .convertFrom<List<String>> { it.map(Pattern::compile) }
     }
 
+    private val sourceXServer: String? by config {
+        "jibri.capture.source-x-server".from(Config.configSource)
+    }
+
     init {
         sink = StreamSink(
             url = streamingParams.rtmpUrl,
@@ -123,7 +127,7 @@ class StreamingJibriService(
                     }
                 }
                 jibriSelenium.sendPresence()
-                capturer.start(sink)
+                capturer.start(sink, sourceXServer)
             } catch (t: Throwable) {
                 logger.error("Error while setting fields in presence", t)
                 publishStatus(ComponentState.Error(ErrorSettingPresenceFields))

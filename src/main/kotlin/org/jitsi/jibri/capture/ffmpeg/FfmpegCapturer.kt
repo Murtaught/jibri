@@ -64,7 +64,7 @@ class FfmpegCapturer(
     private val ffmpeg: JibriSubprocess = JibriSubprocess("ffmpeg", ffmpegOutputLogger)
 ) : Capturer, StatusPublisher<ComponentState>() {
     private val logger = Logger.getLogger(this::class.qualifiedName)
-    private val getCommand: (Sink) -> List<String>
+    private val getCommand: (Sink, String?) -> List<String>
     private val ffmpegStatusStateMachine = FfmpegStatusStateMachine()
 
     companion object {
@@ -76,8 +76,12 @@ class FfmpegCapturer(
         val osType = osDetector.getOsType()
         logger.debug("Detected os as OS: $osType")
         getCommand = when (osType) {
-            OsType.MAC -> { sink: Sink -> getFfmpegCommandMac(FfmpegExecutorParams(), sink) }
-            OsType.LINUX -> { sink: Sink -> getFfmpegCommandLinux(FfmpegExecutorParams(), sink) }
+            OsType.MAC -> { sink: Sink, sourceXServer: String? ->
+                getFfmpegCommandMac(FfmpegExecutorParams(), sink, sourceXServer)
+            }
+            OsType.LINUX -> { sink: Sink, sourceXServer: String? ->
+                getFfmpegCommandLinux(FfmpegExecutorParams(), sink, sourceXServer)
+            }
             else -> throw UnsupportedOsException()
         }
 
@@ -88,8 +92,8 @@ class FfmpegCapturer(
     /**
      * Start the capturer and write to the given [Sink].
      */
-    override fun start(sink: Sink) {
-        val command = getCommand(sink)
+    override fun start(sink: Sink, sourceXServer: String?) {
+        val command = getCommand(sink, sourceXServer)
         ffmpeg.launch(command)
     }
 

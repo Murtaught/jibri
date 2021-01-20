@@ -117,6 +117,10 @@ class FileRecordingJibriService(
         }
         "jibri.recording.finalize-script".from(Config.configSource)
     }
+    private val sourceXServer: String? by config {
+        "jibri.capture.source-x-server".from(Config.configSource)
+    }
+
     /**
      * The directory in which we'll store recordings for this particular session.  This is a directory that will
      * be nested within [recordingsDirectory].
@@ -153,7 +157,7 @@ class FileRecordingJibriService(
                 jibriSelenium.addToPresence("session_id", fileRecordingParams.sessionId)
                 jibriSelenium.addToPresence("mode", JibriIq.RecordingMode.FILE.toString())
                 jibriSelenium.sendPresence()
-                capturer.start(sink)
+                capturer.start(sink, sourceXServer)
             } catch (t: Throwable) {
                 logger.error("Error while setting fields in presence", t)
                 publishStatus(ComponentState.Error(ErrorSettingPresenceFields))
@@ -230,6 +234,6 @@ class FileRecordingJibriService(
     }
 }
 
-object ErrorCreatingRecordingsDirectory : JibriError(ErrorScope.SYSTEM, "Could not creat recordings director")
+object ErrorCreatingRecordingsDirectory : JibriError(ErrorScope.SYSTEM, "Could not create recordings directory")
 object RecordingsDirectoryNotWritable : JibriError(ErrorScope.SYSTEM, "Recordings directory is not writable")
 object CouldntWriteMeetingMetadata : JibriError(ErrorScope.SYSTEM, "Could not write meeting metadata")

@@ -18,7 +18,11 @@ package org.jitsi.jibri.capture.ffmpeg
 
 import org.jitsi.jibri.sink.Sink
 
-fun getFfmpegCommandLinux(ffmpegExecutorParams: FfmpegExecutorParams, sink: Sink): List<String> {
+fun getFfmpegCommandLinux(
+    ffmpegExecutorParams: FfmpegExecutorParams,
+    sink: Sink,
+    sourceXServer: String? = null
+): List<String> {
     return listOf(
         "ffmpeg", "-y", "-v", "info",
         "-f", "x11grab",
@@ -26,7 +30,7 @@ fun getFfmpegCommandLinux(ffmpegExecutorParams: FfmpegExecutorParams, sink: Sink
         "-r", ffmpegExecutorParams.framerate.toString(),
         "-s", ffmpegExecutorParams.resolution,
         "-thread_queue_size", ffmpegExecutorParams.queueSize.toString(),
-        "-i", ":0.0+0,0",
+        "-i", sourceXServer ?: ":0.0+0,0",
         "-f", "alsa",
         "-thread_queue_size", ffmpegExecutorParams.queueSize.toString(),
         "-i", "plug:bsnoop",
@@ -40,14 +44,18 @@ fun getFfmpegCommandLinux(ffmpegExecutorParams: FfmpegExecutorParams, sink: Sink
     )
 }
 
-fun getFfmpegCommandMac(ffmpegExecutorParams: FfmpegExecutorParams, sink: Sink): List<String> {
+fun getFfmpegCommandMac(
+    ffmpegExecutorParams: FfmpegExecutorParams,
+    sink: Sink,
+    sourceXServer: String? = null
+): List<String> {
     return listOf(
         "ffmpeg", "-y", "-v", "info",
         "-thread_queue_size", ffmpegExecutorParams.queueSize.toString(),
         "-f", "avfoundation",
         "-framerate", ffmpegExecutorParams.framerate.toString(),
         "-video_size", ffmpegExecutorParams.resolution,
-        "-i", "0:0",
+        "-i", sourceXServer ?: "0:0",
         "-vsync", "2",
         "-acodec", "aac", "-strict", "-2", "-ar", "44100", "-b:a 128k",
         "-c:v", "libx264", "-preset", ffmpegExecutorParams.videoEncodePreset,

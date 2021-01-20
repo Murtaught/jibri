@@ -28,7 +28,7 @@ interface Capturer {
     /**
      * Start the capturer with the given [Sink].
      */
-    fun start(sink: Sink)
+    fun start(sink: Sink, sourceXServer: String? = null)
 
     /**
      * Stop the capturer
