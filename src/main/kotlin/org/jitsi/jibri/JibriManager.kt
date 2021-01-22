@@ -21,6 +21,8 @@ import org.jitsi.jibri.config.Config
 import org.jitsi.jibri.config.XmppCredentials
 import org.jitsi.jibri.health.EnvironmentContext
 import org.jitsi.jibri.selenium.CallParams
+import org.jitsi.jibri.selenium.JibriSelenium
+import org.jitsi.jibri.selenium.JibriSeleniumOptions
 import org.jitsi.jibri.service.JibriService
 import org.jitsi.jibri.service.JibriServiceStatusHandler
 import org.jitsi.jibri.service.ServiceParams
@@ -110,6 +112,10 @@ class JibriManager : StatusPublisher<Any>() {
 
     private val statsDClient: JibriStatsDClient? = if (enableStatsD) { JibriStatsDClient() } else null
 
+    private val seleniumDisplayName: String? by config {
+        "jibri.capture.selenium-display".from(Config.configSource)
+    }
+
     /**
      * Note: should only be called if the instance-wide lock is held (i.e. called from
      * one of the synchronized methods)
@@ -143,7 +149,10 @@ class JibriManager : StatusPublisher<Any>() {
                 fileRecordingRequestParams.sessionId,
                 fileRecordingRequestParams.callLoginParams,
                 serviceParams.appData?.fileRecordingMetadata
-            )
+            ),
+            jibriSelenium = JibriSelenium(JibriSeleniumOptions(
+                display = seleniumDisplayName ?: ":0"
+            ))
         )
         statsDClient?.incrementCounter(ASPECT_START, TAG_SERVICE_RECORDING)
         startService(service, serviceParams, environmentContext, serviceStatusHandler)
@@ -162,7 +171,12 @@ class JibriManager : StatusPublisher<Any>() {
     ) {
         logger.info("Starting a stream with params: $serviceParams $streamingParams")
         throwIfBusy()
-        val service = StreamingJibriService(streamingParams)
+        val service = StreamingJibriService(
+            streamingParams,
+            jibriSelenium = JibriSelenium(JibriSeleniumOptions(
+                display = seleniumDisplayName ?: ":0"
+            ))
+        )
         statsDClient?.incrementCounter(ASPECT_START, TAG_SERVICE_LIVE_STREAM)
         startService(service, serviceParams, environmentContext, serviceStatusHandler)
     }

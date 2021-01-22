@@ -72,11 +72,11 @@ data class StreamingParams(
  * to a url
  */
 class StreamingJibriService(
-    private val streamingParams: StreamingParams
+    private val streamingParams: StreamingParams,
+    private val jibriSelenium: JibriSelenium = JibriSelenium()
 ) : StatefulJibriService("Streaming") {
     private val capturer = FfmpegCapturer()
     private val sink: Sink
-    private val jibriSelenium = JibriSelenium()
 
     private val rtmpAllowList: List<Pattern> by config {
         "jibri.streaming.rtmp-allow-list".from(Config.configSource)
