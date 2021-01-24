@@ -40,6 +40,7 @@ import org.openqa.selenium.logging.LogType
 import org.openqa.selenium.logging.LoggingPreferences
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.UnreachableBrowserException
+import java.io.File
 import java.time.Duration
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -82,7 +83,12 @@ data class JibriSeleniumOptions(
     /**
      * How long we should stay in a call with no other participants before quitting
      */
-    val emptyCallTimeout: Duration = EmptyCallStatusCheck.defaultCallEmptyTimeout
+    val emptyCallTimeout: Duration = EmptyCallStatusCheck.defaultCallEmptyTimeout,
+
+    /**
+     * This path will be passed to Chromedriver and will be used log output location.
+     */
+    val chromedriverLogFilePath: String = "/tmp/chromedriver.log"
 )
 
 val SIP_GW_URL_OPTIONS = listOf(
@@ -136,7 +142,9 @@ class JibriSelenium(
      * Set up default chrome driver options (using fake device, etc.)
       */
     init {
-        System.setProperty("webdriver.chrome.logfile", "/tmp/chromedriver.log")
+        // Creating all necessary directories for log file, just in case.
+        File(jibriSeleniumOptions.chromedriverLogFilePath).parentFile.mkdirs()
+        System.setProperty("webdriver.chrome.logfile", jibriSeleniumOptions.chromedriverLogFilePath)
         val chromeOptions = ChromeOptions()
         chromeOptions.addArguments(chromeOpts)
         chromeOptions.setExperimentalOption("w3c", false)

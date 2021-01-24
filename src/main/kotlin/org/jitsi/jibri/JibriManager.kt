@@ -116,6 +116,10 @@ class JibriManager : StatusPublisher<Any>() {
         "jibri.capture.selenium-display".from(Config.configSource)
     }
 
+    private val chromedriverLogFilePath: String? by config {
+        "jibri.capture.chromedriver-log-file".from(Config.configSource)
+    }
+
     /**
      * Note: should only be called if the instance-wide lock is held (i.e. called from
      * one of the synchronized methods)
@@ -143,6 +147,12 @@ class JibriManager : StatusPublisher<Any>() {
     ) {
         throwIfBusy()
         logger.info("Starting a file recording with params: $fileRecordingRequestParams")
+        val jibriSeleniumOptions = JibriSeleniumOptions().let {
+            it.copy(
+                display = seleniumDisplayName ?: it.display,
+                chromedriverLogFilePath = chromedriverLogFilePath ?: it.chromedriverLogFilePath
+            )
+        }
         val service = FileRecordingJibriService(
             FileRecordingParams(
                 fileRecordingRequestParams.callParams,
@@ -150,9 +160,7 @@ class JibriManager : StatusPublisher<Any>() {
                 fileRecordingRequestParams.callLoginParams,
                 serviceParams.appData?.fileRecordingMetadata
             ),
-            jibriSelenium = JibriSelenium(JibriSeleniumOptions(
-                display = seleniumDisplayName ?: ":0"
-            ))
+            jibriSelenium = JibriSelenium(jibriSeleniumOptions)
         )
         statsDClient?.incrementCounter(ASPECT_START, TAG_SERVICE_RECORDING)
         startService(service, serviceParams, environmentContext, serviceStatusHandler)
@@ -171,11 +179,15 @@ class JibriManager : StatusPublisher<Any>() {
     ) {
         logger.info("Starting a stream with params: $serviceParams $streamingParams")
         throwIfBusy()
+        val jibriSeleniumOptions = JibriSeleniumOptions().let {
+            it.copy(
+                display = seleniumDisplayName ?: it.display,
+                chromedriverLogFilePath = chromedriverLogFilePath ?: it.chromedriverLogFilePath
+            )
+        }
         val service = StreamingJibriService(
             streamingParams,
-            jibriSelenium = JibriSelenium(JibriSeleniumOptions(
-                display = seleniumDisplayName ?: ":0"
-            ))
+            jibriSelenium = JibriSelenium(jibriSeleniumOptions)
         )
         statsDClient?.incrementCounter(ASPECT_START, TAG_SERVICE_LIVE_STREAM)
         startService(service, serviceParams, environmentContext, serviceStatusHandler)
